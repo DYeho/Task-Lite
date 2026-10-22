@@ -1,36 +1,43 @@
-# SPEC-000: Foundation — TaskFlow Lite
+# SPEC-000: Foundation
 
 | Campo | Valor |
-| --- | --- |
+|-------|-------|
+| Proyecto | TaskFlow Lite |
 | Estado | Borrador |
-| Tipo | Técnica / fundacional |
-| Historias funcionales | Ninguna (se definen en specs posteriores) |
+| Tipo | Fundación técnica (sin historias funcionales) |
+
+---
 
 ## 1. Propósito
 
-Definir la base técnica y de trabajo sobre la que se construirá TaskFlow Lite, de modo que las specs funcionales posteriores partan de un proyecto ejecutable, ordenado y con reglas compartidas.
+Establecer la base técnica y las reglas de trabajo de TaskFlow Lite antes de implementar cualquier historia funcional. Esta SPEC define cómo se organiza el proyecto, qué restricciones técnicas se respetan, qué convenciones se siguen y cuándo se considera que un incremento técnico está terminado.
 
-Esta spec no entrega funcionalidad de producto. Entrega un esqueleto que se pueda abrir localmente, con estructura y convenciones acordadas.
+Su objetivo es que las siguientes SPECs (funcionales) partan de un terreno común y no tengan que redefinir estas decisiones.
+
+---
 
 ## 2. Alcance
 
-Incluye:
+Esta SPEC cubre:
 
-- Estructura inicial de carpetas y archivos.
-- Restricciones técnicas del proyecto.
-- Convenciones de nombres.
-- Convenciones de Git.
-- Una página base que cargue sus estilos y su módulo JavaScript sin errores.
-- Instrucciones para ejecutar el proyecto localmente desde VSCode.
-- Definición de Done técnica inicial.
+- La estructura inicial de carpetas y archivos del proyecto.
+- Las restricciones técnicas que aplican a todo el proyecto.
+- Las convenciones de nombres para archivos, código, CSS y claves de almacenamiento.
+- Las convenciones de uso de Git.
+- La Definition of Done técnica inicial.
+- La forma de ejecutar el proyecto localmente desde VSCode.
+
+Esta SPEC **no** cubre ninguna funcionalidad de tareas (registrar, visualizar, editar, avanzar estado, eliminar ni persistir). Esas capacidades se tratarán en SPECs posteriores.
+
+---
 
 ## 3. Estructura inicial del proyecto
 
 ```text
 taskflow-lite/
-├── index.html
-├── README.md
 ├── .gitignore
+├── README.md
+├── index.html
 ├── docs/
 │   └── specs/
 │       └── SPEC-000-foundation.md
@@ -41,91 +48,150 @@ taskflow-lite/
         └── main.js
 ```
 
-| Elemento | Responsabilidad |
-| --- | --- |
-| `index.html` | Punto de entrada. Carga `src/css/styles.css` y `src/js/main.js` (como `type="module"`). |
-| `README.md` | Descripción breve del proyecto y pasos para ejecutarlo localmente. |
-| `.gitignore` | Excluye archivos de sistema y de editor que no deben versionarse. |
-| `docs/specs/` | Specs del proyecto, una por archivo. |
-| `src/css/styles.css` | Estilos base. |
-| `src/js/main.js` | Punto de entrada de JavaScript. |
+### Descripción de elementos
 
-Reglas de la estructura:
+| Ruta | Responsabilidad |
+|------|-----------------|
+| `README.md` | Descripción breve del proyecto y cómo ejecutarlo localmente. |
+| `.gitignore` | Excluye archivos que no deben versionarse (sistema operativo, editor, etc.). |
+| `index.html` | Documento HTML5 de entrada, ubicado en la raíz junto a `README.md`. Carga `src/css/styles.css` y el módulo `src/js/main.js`. |
+| `docs/specs/` | Especificaciones del proyecto, una por archivo. |
+| `src/css/styles.css` | Hoja de estilos de la aplicación. |
+| `src/js/main.js` | Punto de entrada de JavaScript. Se carga como módulo (`type="module"`). |
 
-- Todo el código de la aplicación (CSS y JS) vive dentro de `src/`.
-- Las carpetas o módulos adicionales se crean solo cuando una spec posterior los requiera.
-- No se crean carpetas vacías por anticipado.
+### Reglas de crecimiento de la estructura
+
+- Los estilos (CSS) y los scripts (JS) de la aplicación viven dentro de `src/`.
+- `index.html` es el único archivo de la aplicación que se ubica en la raíz del proyecto.
+- No se crean carpetas adicionales dentro de `src/js/` hasta que una SPEC funcional las requiera.
+- Cuando una SPEC funcional requiera separar responsabilidades, se agrupará el código por responsabilidad dentro de `src/js/` (por ejemplo, lógica de dominio, acceso a almacenamiento e interfaz). La estructura concreta se decidirá en esa SPEC, no aquí.
+
+---
 
 ## 4. Restricciones técnicas
 
-1. **Lenguajes:** HTML5, CSS3 y JavaScript con ES Modules (`import` / `export`).
-2. **Sin frameworks ni librerías** de UI, estado o utilidades.
-3. **Sin backend:** no hay servidor propio ni llamadas a APIs externas.
-4. **Persistencia futura:** `localStorage`. No se implementa en esta spec.
-5. **Sin proceso de build:** sin bundlers, transpiladores ni gestores de paquetes en el producto. Lo que se escribe es lo que ejecuta el navegador.
-6. **Ejecución local desde VSCode:** los ES Modules no cargan de forma fiable al abrir `index.html` con doble clic (protocolo `file://`), porque el navegador bloquea la carga de módulos desde ese origen. El proyecto debe ejecutarse mediante un servidor estático local. Opción acordada: la extensión **Live Server** de VSCode. Esta extensión es una herramienta de desarrollo, no una dependencia del proyecto.
-7. **Navegadores objetivo:** versiones recientes de un navegador moderno con soporte de ES Modules y `localStorage`.
+| # | Restricción |
+|---|-------------|
+| 1 | Lenguajes permitidos: HTML5, CSS3 y JavaScript con ES Modules. |
+| 2 | Sin frameworks ni librerías de interfaz. |
+| 3 | Sin backend. Toda la lógica se ejecuta en el navegador. |
+| 4 | La persistencia de datos usará `localStorage`. No se implementa en esta SPEC. |
+| 5 | Sin herramientas de compilación ni empaquetado (bundlers, transpiladores, preprocesadores CSS). |
+| 6 | Sin dependencias externas (no CDN, no gestor de paquetes) salvo que se indique lo contrario en una SPEC posterior. |
+| 7 | El proyecto debe poder ejecutarse localmente desde VSCode. |
+| 8 | El código CSS y JavaScript se organiza dentro de `src/`. `index.html` se ubica en la raíz, a la misma altura que `README.md`. |
+
+### Ejecución local
+
+Los ES Modules **no se cargan de forma confiable al abrir `index.html` directamente con `file://`**, porque los navegadores bloquean la carga de módulos desde ese protocolo. Por eso el proyecto se ejecuta sirviendo la raíz del proyecto por HTTP local.
+
+- Método previsto: extensión **Live Server** de VSCode, abriendo `index.html` desde la raíz del proyecto.
+- Esta extensión es una herramienta de desarrollo y no una dependencia del proyecto: no se agrega al código ni a la estructura.
+
+---
 
 ## 5. Convenciones de nombres
 
+### Archivos y carpetas
+
 | Elemento | Convención | Ejemplo |
-| --- | --- | --- |
-| Carpetas | `kebab-case`, minúsculas | `src/js/`, `docs/specs/` |
-| Archivos HTML, CSS y JS | `kebab-case` | `main.js`, `styles.css` |
-| Variables y funciones JS | `camelCase` | `taskList` |
-| Clases JS | `PascalCase` | `TaskStore` |
-| Constantes globales JS | `UPPER_SNAKE_CASE` | `STORAGE_KEY` |
-| Clases CSS | `kebab-case` | `task-list` |
-| IDs HTML | `kebab-case`, solo cuando sean necesarios | `app-root` |
-| Claves de `localStorage` | Prefijo `taskflow-lite:` | `taskflow-lite:tasks` |
-| Specs | `SPEC-NNN-nombre-corto.md` | `SPEC-000-foundation.md` |
+|----------|------------|---------|
+| Archivos y carpetas del código | `kebab-case`, en minúsculas | `main.js`, `task-list.js` |
+| Archivos de especificación | `SPEC-NNN-nombre-en-kebab-case.md` | `SPEC-000-foundation.md` |
 
-Reglas generales:
+### JavaScript
 
-- Nombres en inglés en el código; documentación en español.
-- Nombres descriptivos; evitar abreviaturas poco claras.
+| Elemento | Convención | Ejemplo |
+|----------|------------|---------|
+| Variables y funciones | `camelCase` | `taskList`, `getTasks` |
+| Constantes de valor fijo | `UPPER_SNAKE_CASE` | `STORAGE_KEY` |
+| Clases (si se usan) | `PascalCase` | `Task` |
+| Funciones booleanas | Prefijo `is`, `has` o `can` | `isCompleted` |
+
+### HTML y CSS
+
+| Elemento | Convención | Ejemplo |
+|----------|------------|---------|
+| Atributos `id` | `kebab-case` | `task-form` |
+| Clases CSS | `kebab-case` con estilo bloque-elemento | `task-card`, `task-card-title` |
+| Variables CSS | `kebab-case` con prefijo `--` | `--color-primary` |
+
+### Almacenamiento
+
+| Elemento | Convención | Ejemplo |
+|----------|------------|---------|
+| Claves de `localStorage` | Prefijo `taskflow-lite:` seguido de `kebab-case` | `taskflow-lite:tasks` |
+
+### Idioma
+
+- Nombres en código (variables, funciones, archivos, clases CSS): **inglés**.
+- Texto visible para la persona usuaria, documentación y mensajes de commit: **español**.
+
+---
 
 ## 6. Convenciones de Git
 
-- **Rama principal:** `main`, siempre en estado funcional.
-- **Ramas de trabajo:** una por spec o cambio, con el formato `tipo/spec-NNN-descripcion-corta`, por ejemplo `feature/spec-001-registrar-tarea`.
-- **Mensajes de commit:** formato Conventional Commits, `tipo: descripción en imperativo`.
-  - Tipos permitidos: `feat`, `fix`, `docs`, `style`, `refactor`, `chore`.
-  - Ejemplo: `docs: add SPEC-000 foundation`.
-- **Commits pequeños:** un propósito por commit.
-- **Referencia a la spec:** el cuerpo del commit o la descripción del cambio menciona la spec que lo origina.
-- **Integración a `main`:** solo cuando se cumple la Definition of Done de la spec correspondiente.
-- **Archivos a ignorar (`.gitignore`):** archivos de sistema operativo (por ejemplo `.DS_Store`, `Thumbs.db`) y configuración personal de editor que no sea compartida.
+### Ramas
+
+| Rama | Uso |
+|------|-----|
+| `main` | Rama estable. Solo contiene trabajo que cumple la Definition of Done. |
+| `feature/SPEC-NNN-descripcion-corta` | Una rama por SPEC o incremento. |
+
+Ejemplo: `feature/SPEC-000-foundation`.
+
+### Commits
+
+Formato: `tipo(alcance): descripción breve en español`
+
+| Tipo | Uso |
+|------|-----|
+| `feat` | Nueva funcionalidad |
+| `fix` | Corrección de un error |
+| `docs` | Cambios en documentación o SPECs |
+| `style` | Cambios de formato o estilos que no alteran la lógica |
+| `refactor` | Reorganización de código sin cambiar el comportamiento |
+| `chore` | Tareas de mantenimiento (por ejemplo, `.gitignore`) |
+
+Ejemplos:
+
+- `docs(spec): agregar SPEC-000 de fundación`
+- `chore(repo): agregar .gitignore`
+
+### Reglas
+
+1. Commits pequeños y con un solo propósito.
+2. No se hace commit de trabajo que rompa la ejecución local del proyecto.
+3. Cada rama se integra a `main` solo cuando cumple la Definition of Done.
+4. El nombre de la rama y los mensajes de commit referencian el número de SPEC cuando aplique.
+
+---
 
 ## 7. Definition of Done técnica inicial
 
-Esta DoD aplica a SPEC-000 y es el punto de partida para las specs posteriores.
+Un incremento se considera terminado cuando cumple todo lo siguiente:
 
-- [ ] La estructura de carpetas coincide con la sección 3.
-- [ ] `index.html` es HTML5 válido y declara `lang`, `charset` y `viewport`.
-- [ ] `index.html` carga `src/css/styles.css` y `src/js/main.js` con `type="module"`.
-- [ ] El proyecto se abre desde VSCode con Live Server y la página carga sin errores en la consola del navegador.
-- [ ] No se usan frameworks, librerías externas, backend ni herramientas de build.
-- [ ] No existe lógica funcional de producto (tareas, estados, persistencia).
-- [ ] El `README.md` explica cómo ejecutar el proyecto localmente.
-- [ ] Los nombres de archivos y carpetas cumplen la sección 5.
-- [ ] Los cambios están en commits que cumplen la sección 6.
-- [ ] La verificación se realizó manualmente y su resultado quedó registrado por quien la ejecutó.
+- [ ] La estructura de archivos coincide con la definida en esta SPEC (o con la SPEC vigente que la extienda).
+- [ ] El proyecto se abre y se ejecuta localmente desde VSCode sirviendo la raíz del proyecto por HTTP.
+- [ ] `index.html` está en la raíz, a la misma altura que `README.md`, es HTML5 válido y declara el idioma del documento.
+- [ ] `main.js` se carga como módulo (`type="module"`) sin errores en la consola del navegador.
+- [ ] `styles.css` se carga correctamente.
+- [ ] No se usan frameworks, librerías externas, backend ni herramientas de compilación.
+- [ ] Los nombres de archivos, código, clases CSS y claves de almacenamiento respetan las convenciones de esta SPEC.
+- [ ] Los cambios están en commits que siguen la convención de Git definida.
+- [ ] El `README.md` indica cómo ejecutar el proyecto localmente.
+- [ ] No se agregó funcionalidad ni requisitos que no estén en la SPEC correspondiente.
+- [ ] La verificación se realizó manualmente y se dejó constancia de lo que se revisó.
+
+---
 
 ## 8. Fuera de alcance
 
-- Historias funcionales: registrar, visualizar o actualizar tareas.
-- Implementación de `localStorage`.
-- Diseño visual detallado, sistema de diseño o identidad gráfica.
-- Pruebas automatizadas y herramientas de linting o formateo.
-- Compartir datos entre personas o dispositivos.
-- Autenticación, usuarios y roles.
-- Despliegue o publicación del sitio.
-- Accesibilidad avanzada y soporte para navegadores antiguos.
+- Cualquier historia funcional: registrar, visualizar, editar, avanzar estado o eliminar tareas.
+- Implementación de la persistencia en `localStorage`.
+- Diseño visual detallado, sistema de diseño y componentes de interfaz.
+- Pruebas automatizadas y herramientas de calidad de código (linters, formateadores).
+- Despliegue o publicación.
+- Compartir datos, sincronización, asignación a otros miembros y vistas de equipo.
+- Soporte para navegadores antiguos o requisitos de accesibilidad formales (se definirán en SPECs posteriores si se requieren).
 
-## 9. Decisiones abiertas
-
-| Tema | Pregunta | Efecto |
-| --- | --- | --- |
-| Servidor local | ¿Se confirma Live Server como forma oficial de ejecución? | Define el contenido del `README.md` y el paso de verificación de la DoD. |
-| Datos compartidos | ¿El equipo usará un solo navegador o necesita compartir datos? | No afecta a esta spec, pero sí a las specs funcionales posteriores. |
